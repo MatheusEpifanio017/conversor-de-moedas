@@ -71,45 +71,69 @@
         BTC: 0.000015
     };
 
-    const btn = document.getElementById("btn-convetrer");
-    const historico = [];
+    const btn = document.getElementById("btn-converter");
+    let historico = [];
+    const historicoCache = localStorage.getItem("historico");
+    if (historicoCache) {
+        historico = historicoCache.split(",")
+    }
+    montaListaHistorico();
 
     btn.addEventListener("click", function() {
-        const valor = document.getElementById("quantia").value;
+        const valor = Number(document.getElementById("quantia").value);
         const de = document.getElementById("moeda-origem").value;
         const para = document.getElementById("moeda-destino").value;
 
         // Validação de entrada
-        if (valor < 0) {
+        if (valor <= 0) {
             alert("Apenas valores positivos");
+            return;
+        }
+
+        if (de === para) {
+            alert("Não é possível converter para a mesma moeda");
+            return;
         }
 
         // Lógica de conversão complexa
         // Primeiro converte tudo para dólar, depois para a moeda final
         let valorEmDolar = valor / taxas[de];
-        let resultadoFinal = valorEmDolar * taxas.para;
+        let resultadoFinal = valorEmDolar * taxas[para];
 
         // Exibir na tela
-        document.getElementById("resultado-valor").innerText = resultadoFinal.toFixed(2);
+        let fixed = 2;
+        if (para === 'BTC') {
+            fixed = 5;
+        }
+        const resultadoFinalTexto = resultadoFinal.toFixed(fixed);
+        document.getElementById("resultado-valor").innerText = resultadoFinalTexto;
 
         // Adicionar ao histórico
-        atualizarHistorico(valor, de, para, resultadoFinal);
+        atualizarHistorico(valor, de, para, resultadoFinalTexto);
+        document.getElementById("quantia").value = ""
+        document.getElementById("quantia").focus();
     });
 
     function atualizarHistorico(v, o, d, r) {
-        const lista = document.getElementById("lista-historico");
-        
         const texto = v + " " + o + " equivale a " + r + " " + d;
         historico.push(texto);
 
-        // Renderiza apenas os últimos 3
-        lista.innerHtml = ""; 
-        for (let i = 0; i < 3; i++) {
+        localStorage.setItem("historico", historico);
+        montaListaHistorico();
+    }
+
+    function montaListaHistorico() {
+        const lista = document.getElementById("lista-historico");
+
+        lista.innerHTML = "";
+        for (let i = historico.length - 1; i >= 0; i--) {
             let li = document.createElement("li");
-            li.text = historico[i];
+            li.textContent = historico[i];
             lista.appendChild(li);
         }
     }
+
+
 </script>
 
 </body>
